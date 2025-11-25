@@ -14,7 +14,7 @@ class EmotionAnalyzer:
         result = self.detector.detect_emotions(img)
 
         if len(result)==0:
-            return {'message':'얼굴이 감지되지 않았습니다.'}
+            return {'message':'얼굴이 감지되지 않았습니다!'}
         
         emotions = result[0]['emotions']
         emotion = max(emotions, key=emotions.get)
