@@ -1,0 +1,4 @@
+SpeechRecognition
+opencv-python
+fer
+konlpy
