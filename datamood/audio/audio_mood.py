@@ -3,7 +3,7 @@ import speech_recognition as sr
 class AudioPreprocessor:
     """
     오디오 파일에서 텍스트를 추출하여 감정 분석을 위한
-    텍스트 전처리 단계를 수행하는 클래스입니다.
+    텍스트 전처리 단계를 수행하고, 그 결과를 파일로 저장하는 클래스입니다.
     """
     def __init__(self, language='ko-KR'):
         # Recognizer 객체 초기화
@@ -29,7 +29,6 @@ class AudioPreprocessor:
             print("-> 음성 인식을 시도합니다...")
             
             # Google Web Speech API를 사용하여 텍스트로 변환
-            # key 매개변수를 생략하면 무료 공용 키를 사용합니다.
             text = self.recognizer.recognize_google(
                 audio_data, 
                 language=self.language
@@ -51,23 +50,42 @@ class AudioPreprocessor:
             print(f"❌ 기타 오류 발생: {e}")
             return None
 
+    def save_text_to_file(self, text_content, output_file_path):
+        """
+        추출된 텍스트를 지정된 경로의 .txt 파일로 저장합니다.
+        
+        :param text_content: 저장할 텍스트 문자열
+        :param output_file_path: 저장할 .txt 파일의 경로 및 이름
+        """
+        try:
+            # 'w' 모드(쓰기 모드)와 인코딩(UTF-8)을 지정하여 파일 열기
+            with open(output_file_path, 'w', encoding='utf-8') as f:
+                f.write(text_content)
+            print(f"💾 텍스트 저장 성공: 파일 '{output_file_path}'에 저장되었습니다.")
+            return True
+        except Exception as e:
+            print(f"❌ 파일 저장 오류 발생: {e}")
+            return False
 
+
+# ----------------------------------------------------------------------
 # --- 예시 사용 ---
 if __name__ == "__main__":
-    # 라이브러리 설치 필요: pip install SpeechRecognition
     # 인식 테스트를 위해 실제 오디오 파일 경로로 대체해야 합니다.
     example_audio_path = r"C:\Users\jinui\Downloads\안녕하세오.wav"
-    
-    # 더 정확한 테스트를 위해 유효한 wav 파일을 준비해야 합니다.
-    # 이 코드를 실행하기 전에 'sample_korean_speech.wav' 파일을 해당 경로에 두거나, 
-    # 유효한 경로로 변경해야 합니다.
+    # 텍스트를 저장할 경로와 파일명을 지정합니다. (예: 현재 디렉토리의 'recognized_speech.txt')
+    output_text_path = "recognized_speech.txt"
     
     preprocessor = AudioPreprocessor(language='ko-KR')
     
+    # 1. 텍스트 추출
     recognized_text = preprocessor.extract_text_from_audio(example_audio_path)
     
     if recognized_text:
-        # 추출된 텍스트를 이용해 다음 감정 분석 전처리를 수행
-        print("\n[다음 단계]")
-        print(f"추출된 텍스트: '{recognized_text}'")
-        print("이제 이 텍스트를 토크나이징, 정규화 등의 텍스트 전처리 파이프라인으로 전달하여 감정을 분석합니다.")
+        print("\n[다음 단계: 텍스트 파일 저장]")
+        # 2. 추출된 텍스트를 파일로 저장
+        preprocessor.save_text_to_file(recognized_text, output_text_path)
+        
+        # 3. 다음 감정 분석 전처리 단계 안내
+        print("\n[이후 파이프라인]")
+        print("이제 저장된 텍스트를 토크나이징, 정규화 등의 텍스트 전처리 파이프라인으로 전달하여 감정을 분석합니다.")
