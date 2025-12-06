@@ -19,7 +19,63 @@ os.environ["FFMPEG_PATH"] = os.path.join(FFMPEG_BIN_PATH, "ffmpeg.exe")
 os.environ["FFPROBE_PATH"] = os.path.join(FFMPEG_BIN_PATH, "ffprobe.exe")
 print(f"✅ FFMPEG_PATH 확인: {os.environ.get('FFMPEG_PATH')}")
 
-# 2. YouTube 다운로드 및 WAV 변환 클래스
+# 오디오 파일을 받아서 텍스트로 추출하는 클래스
+class AudioPreprocessor:
+    """
+    오디오 파일에서 텍스트를 추출하여 감정 분석을 위한
+    텍스트 전처리 단계를 수행하고, 그 결과를 파일로 저장하는 클래스
+    """
+    def __init__(self, language='ko-KR'):
+        # Recognizer 객체 초기화
+        self.recognizer = sr.Recognizer()
+        # 음성 인식 언어 설정 (기본값: 한국어)
+        self.language = language
+
+    def extract_text_from_audio(self, audio_file_path):
+        # 주어진 오디오 파일 경로에서 텍스트를 추출
+        try:
+            with sr.AudioFile(audio_file_path) as source:
+                print(f"-> 오디오 파일 '{audio_file_path}' 로드 중...")
+                audio_data = self.recognizer.record(source)
+                
+            print("-> 음성 인식을 시도합니다...")
+            text = self.recognizer.recognize_google(
+                audio_data, 
+                language=self.language
+            )
+            print(f"인식 성공: '{text[:50]}...'")
+            return text
+            
+        # 인식기가 음성을 이해하지 못 했을 때
+        except sr.UnknownValueError:
+            print("인식 실패: 음성을 이해할 수 없거나 명확하지 않습니다.")
+            return None
+        # Google API 호출 시 네트워크나 인증 문제로 실패했을 때
+        except sr.RequestError as e:
+            print(f"요청 오류: Google API 연결 문제 발생; {e}")
+            return None
+        # 파일이 존재하지 않을 때
+        except FileNotFoundError:
+            print(f"파일 오류: 지정된 파일 '{audio_file_path}'을 찾을 수 없습니다.")
+            return None
+        # 그 외의 모든 예외처리
+        except Exception as e:
+            print(f"기타 오류 발생: {e}")
+            return None
+
+    def save_text_to_file(self, text_content, output_file_path):
+        # 추출된 텍스트를 지정된 경로의 .txt 파일로 저장
+        try:
+            with open(output_file_path, 'w', encoding='utf-8') as f:
+                f.write(text_content)
+            print(f"텍스트 저장 성공: 파일 '{output_file_path}'에 저장되었습니다.")
+            return True
+        except Exception as e:
+            print(f"파일 저장 오류 발생: {e}")
+            return False
+
+
+# YouTube 다운로드 및 WAV 변환 클래스
 class YouTubeDownloader:
     """
     YouTube 영상에서 오디오를 다운로드하고, 음성 인식을 위해
@@ -89,118 +145,36 @@ class YouTubeDownloader:
             print(f"   -> 임시 디렉토리 ({self.output_dir}) 정리 완료.")
         except OSError as e:
             print(f"   -> 디렉토리 삭제 중 오류 발생: {e}")
-        
-
-# 3. 오디오 파일을 텍스트로 변환하는 독립 함수
-def transcribe_audio_file(wav_path, output_txt_path="output_transcript.txt"):
-    #WAV 파일 경로를 받아 Google Speech Recognition을 사용하여 텍스트로 변환하고 파일로 저장
-    
-    # Recognizer 객체를 생성하여 음성 인식
-    r = sr.Recognizer()
-    recognized_text = ""
-    
-    print("✅ 3. 텍스트 인식(Transcribing) 시작...")
-    try:
-        if not os.path.exists(wav_path):
-            raise FileNotFoundError(f"WAV 파일이 존재하지 않습니다: {wav_path}")
-
-        # sr.AudioFile을 사용하여 WAV 파일을 음원으로 열고, with 블록이 끝나면 자동으로 닫힘
-        with sr.AudioFile(wav_path) as source:
-            # 오디오 파일 전체를 읽어들여 AudioData 객체로 저장
-            audio_data = r.record(source) 
             
-            # Google Web Speech API를 호출하여 오디오 데이터에서 텍스트를 인식
-            # language='ko-KR'은 한국어로 인식하도록 지정
-            recognized_text = r.recognize_google(audio_data, language='ko-KR') 
-            
-            # 인식된 텍스트를 지정된 경로의 .txt 파일에 UTF-8 인코딩으로 저장
-            with open(output_txt_path, 'w', encoding='utf-8') as f:
-                f.write(recognized_text)
-
-            print("\n" + "=" * 25 + " 인식된 최종 텍스트 " + "=" * 25)
-            print(recognized_text)
-            print("=" * 75)
-            print(f"**인식 결과가 '{output_txt_path}' 파일에 저장되었습니다.**")
-            
-    except sr.UnknownValueError:
-        print("❌ Google Speech Recognition이 오디오를 이해할 수 없습니다. (음성이 없거나 명확하지 않음)")
-    except sr.RequestError as e:
-        print(f"❌ Google Speech Recognition 서비스에 연결할 수 없습니다. (네트워크 또는 API 문제) 에러: {e}")
-    except FileNotFoundError as e:
-        print(f"❌ 파일 처리 오류: {e}")
-    except Exception as e:
-        print(f"❌ 인식 중 알 수 없는 오류 발생: {e}")
-
-
-# 오디오 파일을 받아서 텍스트로 추출하는 클래스
-class AudioPreprocessor:
-    """
-    오디오 파일에서 텍스트를 추출하여 감정 분석을 위한
-    텍스트 전처리 단계를 수행하고, 그 결과를 파일로 저장하는 클래스
-    """
-    def __init__(self, language='ko-KR'):
-        # Recognizer 객체 초기화
-        self.recognizer = sr.Recognizer()
-        # 음성 인식 언어 설정 (기본값: 한국어)
-        self.language = language
-
-    def extract_text_from_audio(self, audio_file_path):
-        # 주어진 오디오 파일 경로에서 텍스트를 추출
-        try:
-            with sr.AudioFile(audio_file_path) as source:
-                print(f"-> 오디오 파일 '{audio_file_path}' 로드 중...")
-                audio_data = self.recognizer.record(source)
-                
-            print("-> 음성 인식을 시도합니다...")
-            text = self.recognizer.recognize_google(
-                audio_data, 
-                language=self.language
-            )
-            print(f"인식 성공: '{text[:50]}...'")
-            return text
-            
-        except sr.UnknownValueError:
-            print("인식 실패: 음성을 이해할 수 없거나 명확하지 않습니다.")
-            return None
-        except sr.RequestError as e:
-            print(f"요청 오류: Google API 연결 문제 발생; {e}")
-            return None
-        except FileNotFoundError:
-            print(f"파일 오류: 지정된 파일 '{audio_file_path}'을 찾을 수 없습니다.")
-            return None
-        except Exception as e:
-            print(f"기타 오류 발생: {e}")
-            return None
-
-    def extract_text_from_youtube(self, youtube_url, cleanup=True):
+    def extract_text_from_youtube(self, youtube_url, cleanup=True, output_txt_path = "output_transcript.txt"):
         """
-        YouTube URL을 받아 오디오 다운로드 → WAV 변환 → 텍스트 인식까지 수행하는 함수
-        기존 print 스타일과 코드 흐름을 그대로 유지하여 자연스럽게 확장
+        YouTube URL을 받아 오디오 다운로드 → WAV 변환 → 텍스트 인식까지 수행하는 통합 함수
         """
-        print(f"\n🎬 YouTube URL 처리 시작: {youtube_url}")
+        print(f"YouTube URL 처리 시작: {youtube_url}")
 
-        downloader = YouTubeDownloader()
-        wav_path = downloader.download_and_convert(youtube_url)
+        # 다운로드 및 변환 단계
+        wav_path = self.download_and_convert(youtube_url)
 
         if not wav_path:
-            print("❌ YouTube 오디오 처리 실패")
+            print("❌ YouTube 오디오 처리 실패로 파이프라인 중단.")
+            if cleanup:
+                self.cleanup()
             return None
 
-        print("🎙 YouTube 오디오 → 텍스트 변환 시도")
-        text = self.extract_text_from_audio(wav_path)
-
+        # 텍스트 추출 및 저장 단계
+        print("YouTube 오디오 → 텍스트 변환 시도")
+        
+        # AudioPreprocessor 객체 생성
+        preprocessor = AudioPreprocessor(language='ko-KR') 
+        
+        # 생성된 객체를 통해 메서드 호출
+        recognized_text = preprocessor.extract_text_from_audio(wav_path) 
+        
+        if recognized_text:
+            preprocessor.save_text_to_file(recognized_text, output_txt_path)
+            
+        # 정리 단계 (생략)
         if cleanup:
-            downloader.cleanup()
+            self.cleanup()
 
-        return text
-
-    def save_text_to_file(self, text_content, output_file_path):
-        # 추출된 텍스트를 지정된 경로의 .txt 파일로 저장
-        try:
-            with open(output_file_path, 'w', encoding='utf-8') as f:
-                f.write(text_content)
-            print(f"텍스트 저장 성공: 파일 '{output_file_path}'에 저장되었습니다.")
-            return True
-        except Exception as e:
-            print(f"파일 저장 오류 발생: {e}")
-            return False
+        return recognized_text
