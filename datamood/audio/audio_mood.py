@@ -1,4 +1,4 @@
-import os
+import os 
 import yt_dlp
 from pydub import AudioSegment
 import speech_recognition as sr
@@ -74,7 +74,7 @@ class YouTubeDownloader:
             audio = audio.set_channels(1).set_frame_rate(16000) 
             # 변환된 오디오를 WAV 형식으로 저장
             audio.export(self.output_wav_path, format="wav") 
-            print(f"   -> WAV 파일 저장 완료: {self.output_wav_path}")
+            print(f"   -> WAV 파일 저장 완료: {self.output_wav_path}")
             return self.output_wav_path
         except Exception as e:
             print(f"❌ WAV 변환 중 오류 발생: {e}")
@@ -86,10 +86,11 @@ class YouTubeDownloader:
         try:
             # shutil.rmtree를 사용하여 디렉토리와 그 내용을 재귀적으로 삭제
             shutil.rmtree(self.output_dir)
-            print(f"   -> 임시 디렉토리 ({self.output_dir}) 정리 완료.")
+            print(f"   -> 임시 디렉토리 ({self.output_dir}) 정리 완료.")
         except OSError as e:
-            print(f"   -> 디렉토리 삭제 중 오류 발생: {e}")
+            print(f"   -> 디렉토리 삭제 중 오류 발생: {e}")
         
+
 # 3. 오디오 파일을 텍스트로 변환하는 독립 함수
 def transcribe_audio_file(wav_path, output_txt_path="output_transcript.txt"):
     #WAV 파일 경로를 받아 Google Speech Recognition을 사용하여 텍스트로 변환하고 파일로 저장
@@ -121,20 +122,17 @@ def transcribe_audio_file(wav_path, output_txt_path="output_transcript.txt"):
             print("=" * 75)
             print(f"**인식 결과가 '{output_txt_path}' 파일에 저장되었습니다.**")
             
-    # 인식기가 음성을 이해하지 못했을 때 발생하는 예외 처리
     except sr.UnknownValueError:
         print("❌ Google Speech Recognition이 오디오를 이해할 수 없습니다. (음성이 없거나 명확하지 않음)")
-    # Google API 호출 시 네트워크나 인증 문제로 실패했을 때 발생하는 예외 처리
     except sr.RequestError as e:
         print(f"❌ Google Speech Recognition 서비스에 연결할 수 없습니다. (네트워크 또는 API 문제) 에러: {e}")
-    # 파일이 존재하지 않을 때 발생하는 예외 처리
     except FileNotFoundError as e:
         print(f"❌ 파일 처리 오류: {e}")
-    # 그 외의 모든 예외 처리
     except Exception as e:
         print(f"❌ 인식 중 알 수 없는 오류 발생: {e}")
 
-#오디오파일을 받아서 텍스트로 추출하는 클래스
+
+# 오디오 파일을 받아서 텍스트로 추출하는 클래스
 class AudioPreprocessor:
     """
     오디오 파일에서 텍스트를 추출하여 감정 분석을 위한
@@ -147,25 +145,17 @@ class AudioPreprocessor:
         self.language = language
 
     def extract_text_from_audio(self, audio_file_path):
-        
-        #주어진 오디오 파일 경로에서 텍스트를 추출
-        
+        # 주어진 오디오 파일 경로에서 텍스트를 추출
         try:
-            # 오디오 파일을 음원(source)으로 지정
             with sr.AudioFile(audio_file_path) as source:
                 print(f"-> 오디오 파일 '{audio_file_path}' 로드 중...")
-                
-                # 파일 전체를 오디오 데이터로 읽어 들임
                 audio_data = self.recognizer.record(source)
                 
             print("-> 음성 인식을 시도합니다...")
-            
-            # Google Web Speech API를 사용하여 텍스트로 변환
             text = self.recognizer.recognize_google(
                 audio_data, 
                 language=self.language
             )
-            
             print(f"인식 성공: '{text[:50]}...'")
             return text
             
@@ -182,12 +172,31 @@ class AudioPreprocessor:
             print(f"기타 오류 발생: {e}")
             return None
 
+    def extract_text_from_youtube(self, youtube_url, cleanup=True):
+        """
+        YouTube URL을 받아 오디오 다운로드 → WAV 변환 → 텍스트 인식까지 수행하는 함수
+        기존 print 스타일과 코드 흐름을 그대로 유지하여 자연스럽게 확장
+        """
+        print(f"\n🎬 YouTube URL 처리 시작: {youtube_url}")
+
+        downloader = YouTubeDownloader()
+        wav_path = downloader.download_and_convert(youtube_url)
+
+        if not wav_path:
+            print("❌ YouTube 오디오 처리 실패")
+            return None
+
+        print("🎙 YouTube 오디오 → 텍스트 변환 시도")
+        text = self.extract_text_from_audio(wav_path)
+
+        if cleanup:
+            downloader.cleanup()
+
+        return text
+
     def save_text_to_file(self, text_content, output_file_path):
-        
-        #추출된 텍스트를 지정된 경로의 .txt 파일로 저장
-        
+        # 추출된 텍스트를 지정된 경로의 .txt 파일로 저장
         try:
-            # 'w' 모드(쓰기 모드)와 인코딩(UTF-8)을 지정하여 파일 열기
             with open(output_file_path, 'w', encoding='utf-8') as f:
                 f.write(text_content)
             print(f"텍스트 저장 성공: 파일 '{output_file_path}'에 저장되었습니다.")
