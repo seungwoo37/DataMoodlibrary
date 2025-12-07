@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from .audio import AudioPreprocessor
+from .audio import AudioPreprocessor, YouTubeDownloader
 from .text import EmphaticSentimentAnalyzer
 from .utils import get_file_type, build_output_path, move_or_copy
 
@@ -17,7 +17,11 @@ class MoodSorter:
     """
 
     def __init__(self, language: str = "ko-KR"):
+        # 오디오(파일) → 텍스트
         self.audio_preprocessor = AudioPreprocessor(language=language)
+        # YouTube URL → 오디오 다운로드 → 텍스트
+        self.youtube_downloader = YouTubeDownloader()
+        # 텍스트 감정 분석기
         self.text_analyzer = EmphaticSentimentAnalyzer()
 
     # ------------------ 내부 헬퍼 ------------------ #
@@ -25,7 +29,7 @@ class MoodSorter:
     def _label_from_text_result(self, result: Dict[str, Any]) -> str:
         """
         EmphaticSentimentAnalyzer.analyze() 결과에서 최종 레이블만 뽑는다.
-        결과는 '강한 긍정/긍정/중립/부정/강한 부정' 형태.
+        결과는 '매우 긍정적/긍정적/중립적/부정적/매우 부정적' 등.
         """
         return result.get("label", "중립")
 
@@ -49,7 +53,8 @@ class MoodSorter:
         """
         YouTube URL 오디오를 다운로드 → 텍스트 인식 → 감정 분석한다.
         """
-        extracted_text: Optional[str] = self.audio_preprocessor.extract_text_from_youtube(url)
+        # 🔧 핵심: YouTubeDownloader에 구현된 extract_text_from_youtube 사용
+        extracted_text: Optional[str] = self.youtube_downloader.extract_text_from_youtube(url)
 
         if not extracted_text:
             return {
@@ -118,6 +123,7 @@ class MoodSorter:
             }
 
         else:
+            # 지원하지 않는 타입
             return {
                 "path": str(p),
                 "type": "unknown",
@@ -133,7 +139,7 @@ class MoodSorter:
     ) -> Dict[str, Any]:
         """
         파일 하나를 분석해서,
-        output_root/레벨/파일명 으로 복사(또는 이동)한다.
+        output_root/감정_레이블/파일명 으로 복사(또는 이동)한다.
         """
         p = Path(path)
         output_root = Path(output_root)
