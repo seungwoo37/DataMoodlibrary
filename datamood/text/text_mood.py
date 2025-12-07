@@ -154,7 +154,7 @@ class MorphSentimentAnalyzer:
         
         return None
 
-    def analyze(self, text):
+    def text_analyze(self, text):
         # 형태소 분석
         raw_tokens_pos = self.okt.pos(text, stem=True)
         
