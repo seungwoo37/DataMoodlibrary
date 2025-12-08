@@ -1,4 +1,8 @@
-SpeechRecognition
-konlpy
-yt-dlp
-pydub
+pip install SpeechRecognition
+pip install konlpy
+pip install yt-dlp
+pip install pydub
+pip install beuatifulsoup4
+pip install shutil
+pip install requests
+pip install jpype1
