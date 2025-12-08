@@ -16,7 +16,7 @@ class MorphSentimentAnalyzer:
             "최고다": 2, "훌륭하다": 2, "행복하다": 2, "대박이다": 2, "재미있다": 2,
             "완벽하다": 2, "멋지다": 2, "환상적이다": 2, "놀랍다": 2, "탁월하다": 2,
             "감격하다": 2, "황홀하다": 2, "대박": 2, "최고": 2, "끝내주다": 2,
-            "만족스럽다": 2, "훌륭": 2, "완벽": 2, "멋": 2,
+            "만족스럽다": 2, "훌륭": 2, "완벽": 2, "멋": 2, 
             
             # 긍정 (+1)
             "좋다": 1, "추천하다": 1, "감동하다": 1, "만족하다": 1, "예쁘다": 1,
@@ -45,6 +45,7 @@ class MorphSentimentAnalyzer:
             "불만": -1, "짜증": -1, "불쾌하다": -1, "불만족스럽다": -1,
             "불안하다": -1, "우울하다": -1, "피곤하다": -1, "힘들다": -1,
             "복잡하다": -1, "애매하다": -1, "모호하다": -1, "의심스럽다": -1,
+            "불안":-1, "불안감을":-1, 
         }
         
         # 어간 매핑 사전 추가 (Okt가 놓칠 수 있는 변형들)
@@ -151,8 +152,12 @@ class MorphSentimentAnalyzer:
         for stem, full_word in self.stem_mapping.items():
             if token.startswith(stem) and full_word in self.lexicon:
                 return self.lexicon[full_word]
-        
+            if stem == token and full_word in self.lexicon:
+                return self.lexicon[full_word]
+                
         return None
+
+
 
     def text_analyze(self, text):
         # 형태소 분석
@@ -266,6 +271,29 @@ class MorphSentimentAnalyzer:
             else:
                 label = "중립적"
         
+        rst = {
+            "text": text,
+            "tokens": tokens,
+            "label": label,
+            "score": round(total_score, 2),
+            "percentage": round(percentage, 2),
+            "num_sentiment_words": num_sentiment_words,
+            "total_words": len(tokens),
+            "reason": details
+        }
+        
+        print(f"원문: {rst['text']}")
+        print(
+            f"판정: {rst['label']} (점수: {rst['score']:+.2f}, "
+            f"백분율: {rst['percentage']})"
+            )
+
+        if rst["reason"]:
+            print("분석 과정:")
+            for detail in rst["reason"]:
+                print(f"    • {detail}")
+        print("-" * 70)
+
         return {
             "text": text,
             "tokens": tokens,
