@@ -1,6 +1,7 @@
 # datamood/text/text_mood.py
 from konlpy.tag import Okt
 import math
+from .텍스트추출_저장 import Converter_save
 
 class MorphSentimentAnalyzer:
     """
@@ -363,3 +364,38 @@ class EmphaticSentimentAnalyzer:
             print("팁: 이 Python 파일과 같은 폴더에 'input_data.txt' 파일을 넣어보세요.")
         except Exception as e:
             print(f"파일 처리 중 오류가 발생했습니다: {e}")
+            
+    def analyze_url(self, url: str):
+        """
+        기사/블로그 등의 URL을 받아서
+        - Converter_save로 제목, 본문을 추출하고
+        - 본문 텍스트에 대해 감정 분석을 수행한다.
+        """
+        # 1) URL에서 제목, 본문 추출
+        title, body = Converter_save.text_converter(url)
+
+        # 2) 본문이 비어 있으면 기본값 반환
+        if not body.strip():
+            return {
+                "text": body,
+                "tokens": [],
+                "label": "중립",
+                "score": 0.0,
+                "percentage": 50.0,
+                "num_sentiment_words": 0,
+                "total_words": 0,
+                "reason": [],
+                "title": title,
+                "url": url,
+                "source": "url",
+            }
+
+        # 3) 기존 analyze() 재사용해서 감정 분석
+        base_result = self.analyze(body)  # dict 구조 그대로 들어옴
+
+        # 4) 메타 정보(제목, URL, source)만 덧붙여서 반환
+        base_result["title"] = title
+        base_result["url"] = url
+        base_result["source"] = "url"
+
+        return base_result
