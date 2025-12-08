@@ -277,6 +277,20 @@ class MorphSentimentAnalyzer:
             "reason": details
         }
 
+
+class EmphaticSentimentAnalyzer:
+    """
+    외부에서 사용하는 감성 분석기 래퍼.
+    - 내부적으로 MorphSentimentAnalyzer를 사용한다.
+    - public 메서드는 analyze(text: str) 하나만 제공.
+    """
+
+    def __init__(self):
+        self._impl = MorphSentimentAnalyzer()
+
+    def analyze(self, text: str):
+        return self._impl.text_analyze(text)
+    
     def analyze_txt_file(self, file_path: str):
         """
         지정된 TXT 파일을 읽고 줄별로 감성 분석을 수행하고,
@@ -301,7 +315,7 @@ class MorphSentimentAnalyzer:
                 if not text:
                     continue
 
-                result = self.text_analyze(text)
+                result = self._impl.text_analyze(text)
 
                 print(f"[Line {idx} 분석 결과]")
                 print(f"원문: {result['text']}")
@@ -321,16 +335,3 @@ class MorphSentimentAnalyzer:
             print("팁: 이 Python 파일과 같은 폴더에 'input_data.txt' 파일을 넣어보세요.")
         except Exception as e:
             print(f"파일 처리 중 오류가 발생했습니다: {e}")
-
-class EmphaticSentimentAnalyzer:
-    """
-    외부에서 사용하는 감성 분석기 래퍼.
-    - 내부적으로 MorphSentimentAnalyzer를 사용한다.
-    - public 메서드는 analyze(text: str) 하나만 제공.
-    """
-
-    def __init__(self):
-        self._impl = MorphSentimentAnalyzer()
-
-    def analyze(self, text: str):
-        return self._impl.text_analyze(text)
