@@ -153,3 +153,35 @@ class MoodSorter:
         result["sorted_path"] = str(dst)
         result["moved"] = bool(move)
         return result
+    def analyze(self, input_value: str | Path) -> Dict[str, Any]:
+        """
+        만능 분석 함수:
+        - YouTube URL  → analyze_youtube()
+        - 일반 http(s) URL(기사 등) → text_analyzer.analyze_url()
+        - 그 외(로컬 파일 경로) → analyze_file()
+        """
+        # 1) 문자열이면서 URL인 경우
+        if isinstance(input_value, str) and is_http_url(input_value):
+            # 1-1) 유튜브 URL이면
+            if "youtube.com/watch" in input_value or "youtu.be/" in input_value:
+                return self.analyze_youtube(input_value)
+            # 1-2) 그 외 http(s) URL → 기사 URL이라고 보고 처리
+            else:
+                url_result = self.text_analyzer.analyze_url(input_value)
+                # EmphaticSentimentAnalyzer.analyze_url() 이
+                # {"title": ..., "analysis": {...}, "text": ...} 이런 식으로
+                # 리턴한다고 가정하고 레이블만 뽑아준다.
+                label = self._label_from_text_result(url_result)
+
+                return {
+                    "type": "url",
+                    "url": input_value,
+                    "emotion_label": label,
+                    "raw": url_result,
+                }
+
+        # 2) URL이 아니면 → 로컬 파일로 간주
+        return self.analyze_file(input_value)
+
+def is_http_url(s: str) -> bool:
+    return isinstance(s, str) and (s.startswith("http://") or s.startswith("https://"))
