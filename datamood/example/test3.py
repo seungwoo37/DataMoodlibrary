@@ -2,7 +2,6 @@
 # datamood/text/text_mood.py
 from konlpy.tag import Okt
 import math
-from 텍스트추출_저장 import Converter_save
 
 class MorphSentimentAnalyzer:
     """
@@ -306,100 +305,6 @@ class MorphSentimentAnalyzer:
             "total_words": len(tokens),
             "reason": details
         }
-
-
-class EmphaticSentimentAnalyzer:
-    """
-    외부에서 사용하는 감성 분석기 래퍼.
-    - 내부적으로 MorphSentimentAnalyzer를 사용한다.
-    - public 메서드는 analyze(text: str) 하나만 제공.
-    """
-
-    def __init__(self):
-        self._impl = MorphSentimentAnalyzer()
-
-    def analyze(self, text: str):
-        return self._impl.text_analyze(text)
-    
-    def analyze_txt_file(self, file_path: str):
-        """
-        지정된 TXT 파일을 읽고 줄별로 감성 분석을 수행하고,
-        결과를 콘솔에 출력한다.
-        """
-
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-
-            if not lines:
-                print(f"[{file_path}] 파일이 비어 있습니다. 분석할 내용이 없습니다.")
-                return
-
-            print("=" * 70)
-            print(f"파일명: {file_path}")
-            print(f"총 {len(lines)}줄의 텍스트를 읽었습니다.")
-            print("-" * 70)
-
-            for idx, line in enumerate(lines, 1):
-                text = line.strip()
-                if not text:
-                    continue
-
-                result = self._impl.text_analyze(text)
-
-                print(f"[Line {idx} 분석 결과]")
-                print(f"원문: {result['text']}")
-                print(
-                    f"판정: {result['label']} (점수: {result['score']:+.2f}, "
-                    f"백분율: {result['percentage']})"
-                )
-
-                if result["reason"]:
-                    print("분석 과정:")
-                    for detail in result["reason"]:
-                        print(f"    • {detail}")
-                print("-" * 70)
-
-        except FileNotFoundError:
-            print(f"에러: 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요: '{file_path}'")
-            print("팁: 이 Python 파일과 같은 폴더에 'input_data.txt' 파일을 넣어보세요.")
-        except Exception as e:
-            print(f"파일 처리 중 오류가 발생했습니다: {e}")
-            
-    def analyze_url(self, url: str):
-        """
-        기사/블로그 등의 URL을 받아서
-        - Converter_save로 제목, 본문을 추출하고
-        - 본문 텍스트에 대해 감정 분석을 수행한다.
-        """
-        # 1) URL에서 제목, 본문 추출
-        title, body = Converter_save.text_converter(url)
-
-        # 2) 본문이 비어 있으면 기본값 반환
-        if not body.strip():
-            return {
-                "text": body,
-                "tokens": [],
-                "label": "중립",
-                "score": 0.0,
-                "percentage": 50.0,
-                "num_sentiment_words": 0,
-                "total_words": 0,
-                "reason": [],
-                "title": title,
-                "url": url,
-                "source": "url",
-            }
-
-        # 3) 기존 analyze() 재사용해서 감정 분석
-        base_result = self.analyze(body)  # dict 구조 그대로 들어옴
-
-        # 4) 메타 정보(제목, URL, source)만 덧붙여서 반환
-        base_result["title"] = title
-        base_result["url"] = url
-        base_result["source"] = "url"
-
-        return base_result
     
 
 if __name__ == "__main__":
