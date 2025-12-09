@@ -1,7 +1,3 @@
-"""
-DataMood package init
-"""
-
 from .audio import AudioPreprocessor
 from .text import EmphaticSentimentAnalyzer
 from .mood_sorter import MoodSorter
