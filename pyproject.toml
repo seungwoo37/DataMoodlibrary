@@ -17,6 +17,9 @@ dependencies = [
   "konlpy",
   "yt-dlp",
   "pydub",
+  "beautifulsoup4",
+  "requests",
+  "jpype1"
 ]
 
 [project.scripts]
