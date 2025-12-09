@@ -6,7 +6,8 @@ Installation
 
 To use datamood, first install it using pip:
 
-..code-block:: console
+.. code-block:: console
+
     (.venv) $ pip install SpeechRecognition
     (.venv) $ pip install konlpy
     (.venv) $ pip install yt-dlp
@@ -15,7 +16,7 @@ To use datamood, first install it using pip:
     (.venv) $ pip install requests
     (.venv) $ pip install jpypel
     
-    **Additional System Dependency: FFmpeg**
+**Additional System Dependency: FFmpeg**
 
 The 'pydub' library requires **FFmpeg** to process audio files. FFmpeg must be installed separately based on your operating system.
 
