@@ -234,7 +234,7 @@ class MoodSorter:
 
         결과 파일 경로는 대략 다음과 같은 형태가 된다.
 
-        - ``output_root/<감정_레이블>/<파일명>``
+        - output_root/<감정_레이블>/<파일명>
 
         Parameters
         ----------
@@ -249,11 +249,12 @@ class MoodSorter:
         Returns
         -------
         dict
-            ``analyze_file()``의 결과에 다음 필드가 추가된 딕셔너리.
+            analyze_file()의 결과에 다음 필드가 추가된 딕셔너리.
 
-            - ``sorted_path``: 실제로 복사/이동된 최종 경로(문자열)
-            - ``moved``: 이동 여부(bool, ``move`` 인자와 동일)
+            - sorted_path: 실제로 복사/이동된 최종 경로(문자열)
+            - moved: 이동 여부(bool, move 인자와 동일)
         """
+
 
         
         p = Path(path)
@@ -282,7 +283,7 @@ class MoodSorter:
         input_value : str or Path
             다음 중 하나를 받을 수 있다.
 
-            - YouTube URL (``youtube.com``, ``youtu.be``, ``shorts`` 등)
+            - YouTube URL (youtube.com, youtu.be, shorts 등)
             - 일반 기사 URL (http/https)
             - 로컬 파일 경로(txt 또는 오디오 파일)
 
@@ -291,10 +292,11 @@ class MoodSorter:
         dict
             입력 타입에 따라 다음 형태 중 하나를 반환한다.
 
-            - YouTube URL: ``analyze_youtube()``의 결과
-            - 기사 URL: ``type="url"``과 분석 결과를 담은 딕셔너리
-            - 로컬 파일: ``analyze_file()``의 결과
+            - YouTube URL: analyze_youtube()의 결과
+            - 기사 URL: type="url"과 분석 결과를 담은 딕셔너리
+            - 로컬 파일: analyze_file()의 결과
         """
+
 
 
         # 1) 문자열이면서 URL인 경우
@@ -337,17 +339,17 @@ class MoodSorter:
 
         동작 방식은 입력 타입별로 다음과 같다.
 
-        - **로컬 텍스트/오디오 파일**
-            - ``analyze()``로 감정 분석을 수행한 뒤
-            - ``base_dir/sorted/<레이블>/`` 아래로 파일을 복사 또는 이동한다.
-
-        - **YouTube URL**
-            - 음성을 텍스트로 변환한 결과를 ``base_dir/downloaded/youtube/*.txt`` 로 저장 후
-            - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
-
-        - **기사 URL(http/https)**
-            - 크롤링한 본문 텍스트를 ``base_dir/downloaded/articles/*.txt`` 로 저장 후
-            - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
+        - 로컬 텍스트/오디오 파일:
+          - analyze()로 감정 분석을 수행한 뒤
+          - base_dir/sorted/<레이블>/ 아래로 파일을 복사 또는 이동한다.
+        - YouTube URL:
+          - 음성을 텍스트로 변환한 결과를
+            base_dir/downloaded/youtube/*.txt 로 저장한 뒤
+          - base_dir/sorted/<레이블>/ 아래로 정렬한다.
+        - 기사 URL(http/https):
+          - 크롤링한 본문 텍스트를
+            base_dir/downloaded/articles/*.txt 로 저장한 뒤
+          - base_dir/sorted/<레이블>/ 아래로 정렬한다.
 
         Parameters
         ----------
@@ -358,17 +360,18 @@ class MoodSorter:
         move : bool, optional
             True이면 정렬 시 원본 파일을 이동하고,
             False이면 복사한다. URL 기반 입력의 경우에는
-            새로 생성된 ``.txt`` 파일만 정렬 대상이 된다.
+            새로 생성된 .txt 파일만 정렬 대상이 된다.
 
         Returns
         -------
         dict
-            ``self.analyze()``의 결과에 다음 필드가 추가된 딕셔너리.
+            self.analyze()의 결과에 다음 필드가 추가된 딕셔너리.
 
-            - ``saved_txt_path``: URL/YouTube에서 생성된 ``.txt`` 파일 경로(없으면 None)
-            - ``sorted_path``: 최종 정렬된 파일 경로(없으면 None)
-            - ``moved``: 이동 여부(bool)
+            - saved_txt_path: URL/YouTube에서 생성된 .txt 파일 경로(없으면 None)
+            - sorted_path: 최종 정렬된 파일 경로(없으면 None)
+            - moved: 이동 여부(bool)
         """
+
 
 
         base_dir = Path(base_dir)
@@ -469,7 +472,7 @@ def is_http_url(s: str) -> bool:
 
 def safe_filename(name: str) -> str:
     """
-    파일 이름에 사용할 수 없는 문자들을 ``"_"``로 치환하여
+    파일 이름에 사용할 수 없는 문자들을 밑줄 문자(_)로 치환하여
     안전한 파일 이름 문자열을 생성한다.
 
     Parameters
@@ -481,8 +484,9 @@ def safe_filename(name: str) -> str:
     -------
     str
         파일 시스템에서 사용할 수 있는 안전한 파일 이름.
-        모든 문자가 치환되어 비게 되면 ``"untitled"``를 반환한다.
+        모든 문자가 치환되어 비게 되면 "untitled"를 반환한다.
     """
+
 
     cleaned = []
     
