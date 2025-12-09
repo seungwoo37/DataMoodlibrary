@@ -3,12 +3,34 @@ from konlpy.tag import Okt
 import math
 from .텍스트추출_저장 import Converter_save
 
+"""
+datamood.text_mood
+------------------
+텍스트 감정 분석 관련 함수와 유틸리티를 포함
+
+주요 함수
+- text_analyze(text): 문장 감정 분석
+- analyze_txt_file(sample.txt) : txt파일을 읽어서 감정 분석
+"""
+
+
 class MorphSentimentAnalyzer:
     """
-    형태소 분석(Okt) + 간단한 lexicon + 부정어/강조어/TF-IDF 개념을 이용한 감성 분석기.
+    형태소 분석(Okt), 확장된 감성 사전(Lexicon), 문맥 규칙(부정어/강조어),
+    그리고 TF-IDF 개념을 결합하여 한국어 텍스트의 감성을 분석하는 코어 클래스.
+
+    이 분석기는 텍스트를 토큰화하고, 각 감성어에 문맥 및 통계적 가중치를 적용하여
+    최종 감성 점수와 백분율을 계산합니다.
     """
 
     def __init__(self):
+        """
+        MorphSentimentAnalyzer의 인스턴스를 초기화합니다.
+
+        한국어 형태소 분석기(Okt), 확장된 감성 사전(lexicon), 어간 매핑 사전,
+        IDF 가중치, 부정어, 강조어, 약화어 목록 등을 로드합니다.
+        """
+        # ... (생략된 초기화 코드) ...
         self.okt = Okt()
         
         # 확장된 감성 사전
@@ -122,7 +144,23 @@ class MorphSentimentAnalyzer:
         self.conjunctions = ["하지만", "그러나", "그런데", "근데", "but", "BUT"]
 
     def calculate_sentence_length_factor(self, num_tokens):
-        """문장 길이에 따른 보정 계수"""
+        """
+        문장의 총 토큰 수에 기반하여 감성 점수를 보정하는 계수를 계산합니다.
+
+        짧은 문장(5개 미만)은 가중치(1.2)를, 긴 문장(20개 초과)은 약화치(0.9)를 적용하여
+        문맥의 집중도에 따른 감성어의 영향력을 조절합니다.
+
+        Parameters
+        ----------
+        num_tokens : int
+            분석 대상 문장의 토큰(형태소) 개수.
+
+        Returns
+        -------
+        float
+            적용할 보정 계수 (1.0 기준).
+        """
+        # ... (생략된 구현 코드) ...
         if num_tokens < 5:
             return 1.2  # 짧은 문장은 각 단어의 영향력 증가
         elif num_tokens > 20:
@@ -130,7 +168,22 @@ class MorphSentimentAnalyzer:
         return 1.0
 
     def detect_sentiment_transition(self, tokens):
-        """접속사를 기준으로 감성 전환 감지"""
+        """
+        텍스트 내에서 감성 전환을 유발하는 접속사(예: 하지만, 그러나)의 위치를 찾습니다.
+
+        전환 지점 이후의 감성어에 가중치를 부여하여 후반부 감성 강조 효과를 적용하는 데 사용됩니다.
+
+        Parameters
+        ----------
+        tokens : list of str
+            분석 대상 텍스트의 토큰 리스트.
+
+        Returns
+        -------
+        list of int
+            감성 전환 접속사의 인덱스 목록.
+        """
+        # ... (생략된 구현 코드) ...
         transitions = []
         for i, token in enumerate(tokens):
             if token in self.conjunctions:
@@ -138,7 +191,20 @@ class MorphSentimentAnalyzer:
         return transitions
 
     def get_sentiment_score(self, token):
-        """토큰의 감성 점수를 반환 (어간 매핑 포함)"""
+        """
+        주어진 토큰에 대해 감성 사전 및 어간 매핑을 통해 기본 감성 점수를 반환합니다.
+
+        Parameters
+        ----------
+        token : str
+            분석할 형태소 토큰.
+
+        Returns
+        -------
+        int or None
+            사전에 등록된 감성 점수 (예: +2, +1, -1, -2). 매칭되는 단어가 없으면 None 반환.
+        """
+        # ... (생략된 구현 코드) ...
         # 직접 매칭
         if token in self.lexicon:
             return self.lexicon[token]
@@ -158,9 +224,58 @@ class MorphSentimentAnalyzer:
                 
         return None
 
-
-
     def text_analyze(self, text):
+        """
+        주어진 텍스트를 분석하고, 감성 점수, 백분율, 라벨 및 상세 분석 결과를 반환합니다.
+
+        전체 감성 점수는 다음과 같은 단계를 거쳐 계산됩니다:
+        1. **형태소 분석**: 텍스트를 토큰화하고 어간 추출(`stem=True`)을 수행합니다.
+        2. **기본 점수**: 감성 사전을 참조하여 기본 점수를 설정합니다.
+        3. **TF-IDF 가중치**: 단어 빈도(Term Frequency, TF)를 로그 스케일로 보정하고,
+           사전 정의된 문서 빈도 역수(Inverse Document Frequency, IDF) 가중치를 적용합니다.
+           $Score_{base} \times (1 + \ln(TF)) \times IDF$
+        4. **문맥 규칙 적용**:
+           * **부정어**: 앞뒤 3개 토큰에 부정어가 있으면 점수 부호를 반전합니다 ($\times -1$).
+           * **강조어/약화어**: 강한/약한 강조어(예: 정말, 꽤) 또는 약화어(예: 조금)에 따라
+             점수에 배수(예: x2.0, x0.7)를 적용합니다.
+           * **감성 전환**: 접속사(예: 하지만) 이후의 감성어는 가중치(x1.3)를 추가합니다.
+        5. **문장 길이 보정**: 문장 길이에 따른 보정 계수를 최종 점수에 곱합니다.
+        6. **정규화**: 계산된 총 점수를 가능한 최대/최소 점수 범위 내에서 0.0~1.0 사이로 정규화하여 백분율(0~100)을 산출합니다.
+           $$Percentage = \frac{Score_{total} - Score_{min}}{Score_{max} - Score_{min}} \times 100$$
+        7. **라벨링**: 백분율을 기준으로 '매우 긍정적', '중립적', '매우 부정적' 등의 라벨을 부여합니다.
+
+        Parameters
+        ----------
+        text : str
+            감성 분석을 수행할 원본 텍스트.
+
+        Returns
+        -------
+        dict
+            분석 결과를 담은 딕셔너리.
+            - 'text', 'tokens', 'label', 'score', 'percentage', 'num_sentiment_words', 'total_words', 'reason' 키를 포함합니다.
+
+        Examples
+        --------
+        >>> text_analyze("서비스가 별로 좋지 않았습니다")
+        [================================================================================
+        한국어 형태소 기반 감성 분석 시스템 (TF-IDF 결합)
+        ================================================================================]
+        [테스트 1/1]
+        원문: 서비스가 별로 좋지 않았습니다.
+        토큰: 서비스 / 별로 / 좋다 / 않다
+        판정: 부정적 (점수: -3.48, 백분율: 32.6)
+        분석 과정:
+        • '별로'(-1*TF1.00*IDF1.4) → -1.68
+        • '좋다'(1*TF1.00*IDF1.5) + 부정어(반전) → -1.80
+        --------------------------------------------------------------------------------
+
+        분석 완료!
+        ================================================================================]
+
+        -----
+        """
+        # ... (생략된 구현 코드) ...
         # 형태소 분석
         raw_tokens_pos = self.okt.pos(text, stem=True)
         
@@ -305,27 +420,40 @@ class MorphSentimentAnalyzer:
             "total_words": len(tokens),
             "reason": details
         }
-
-
+    
 class EmphaticSentimentAnalyzer:
     """
-    외부에서 사용하는 감성 분석기 래퍼.
-    - 내부적으로 MorphSentimentAnalyzer를 사용한다.
-    - public 메서드는 analyze(text: str) 하나만 제공.
+    외부에서 사용하는 감성 분석기 래퍼 클래스.
+
+    내부적으로 :py:class:`~datamood.text.text_mood.MorphSentimentAnalyzer` 를 사용하여
+    텍스트, 파일, URL 등에 대한 감성 분석을 수행하는 public 인터페이스를 제공합니다.
     """
 
     def __init__(self):
         self._impl = MorphSentimentAnalyzer()
 
-    def analyze(self, text: str):
-        return self._impl.text_analyze(text)
-    
-    def analyze_txt_file(self, file_path: str):
+    def analyze(self, text: str) -> dict:
         """
-        지정된 TXT 파일을 읽고 줄별로 감성 분석을 수행하고,
-        결과를 콘솔에 출력한다.
-        """
+        텍스트 문자열에 대한 감성 분석을 수행합니다.
 
+        :param text: 분석할 텍스트 문자열.
+        :type text: str
+        :returns: 감성 분석 결과 딕셔너리 (MorphSentimentAnalyzer.text_analyze와 동일).
+        :rtype: dict
+        """
+        return self._impl.text_analyze(text)
+
+    def analyze_txt_file(self, file_path: str) -> None:
+        """
+        지정된 TXT 파일을 읽고 줄별로 감성 분석을 수행하며, 결과를 콘솔에 출력합니다.
+
+        :param file_path: 분석할 TXT 파일의 경로.
+        :type file_path: str
+        :returns: None
+        :rtype: None
+        :raises FileNotFoundError: 파일 경로를 찾을 수 없을 때 내부적으로 처리됨.
+        """
+        # ... (analyze_txt_file 구현 코드)
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
@@ -364,13 +492,17 @@ class EmphaticSentimentAnalyzer:
             print("팁: 이 Python 파일과 같은 폴더에 'input_data.txt' 파일을 넣어보세요.")
         except Exception as e:
             print(f"파일 처리 중 오류가 발생했습니다: {e}")
-            
-    def analyze_url(self, url: str):
+
+    def analyze_url(self, url: str) -> dict:
         """
-        기사/블로그 등의 URL을 받아서
-        - Converter_save로 제목, 본문을 추출하고
-        - 본문 텍스트에 대해 감정 분석을 수행한다.
+        URL(기사/블로그 등)을 파싱하여 본문 텍스트에 대한 감성 분석을 수행합니다.
+
+        :param url: 분석할 웹 페이지의 URL.
+        :type url: str
+        :returns: 감성 분석 결과와 제목, URL 정보가 추가된 딕셔너리.
+        :rtype: dict
         """
+        # ... (analyze_url 구현 코드)
         # 1) URL에서 제목, 본문 추출
         title, body = Converter_save.text_converter(url)
 
