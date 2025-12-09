@@ -39,7 +39,7 @@ class MoodSorter:
         ----------
         language : str, optional
             오디오 인식에 사용할 언어 코드.
-            기본값은 "ko-KR" 이며, AudioPreprocessor에 전달된다.
+            기본값은 "ko-KR"이며, AudioPreprocessor에 전달된다.
         """
         # 오디오(파일) → 텍스트
         self.audio_preprocessor = AudioPreprocessor(language=language)
