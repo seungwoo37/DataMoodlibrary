@@ -18,8 +18,6 @@ class MoodSorter:
     - ``EmphaticSentimentAnalyzer``: 텍스트 감정 분석
     """
 
-
-
     def __init__(self, language: str = "ko-KR"):
         """
         MoodSorter 인스턴스를 초기화한다.
@@ -339,17 +337,17 @@ class MoodSorter:
 
         동작 방식은 입력 타입별로 다음과 같다.
 
-        - 로컬 텍스트/오디오 파일:
-          - ``analyze()``로 감정 분석을 수행한 뒤
-          - ``base_dir/sorted/<레이블>/`` 아래로 파일을 복사 또는 이동한다.
-        - YouTube URL:
-          - 음성을 텍스트로 변환한 결과를
-            ``base_dir/downloaded/youtube/*.txt`` 로 저장 후
-          - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
-        - 기사 URL(http/https):
-          - 크롤링한 본문 텍스트를
-            ``base_dir/downloaded/articles/*.txt`` 로 저장 후
-          - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
+        - **로컬 텍스트/오디오 파일**
+            - ``analyze()``로 감정 분석을 수행한 뒤
+            - ``base_dir/sorted/<레이블>/`` 아래로 파일을 복사 또는 이동한다.
+
+        - **YouTube URL**
+            - 음성을 텍스트로 변환한 결과를 ``base_dir/downloaded/youtube/*.txt`` 로 저장 후
+            - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
+
+        - **기사 URL(http/https)**
+            - 크롤링한 본문 텍스트를 ``base_dir/downloaded/articles/*.txt`` 로 저장 후
+            - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
 
         Parameters
         ----------
