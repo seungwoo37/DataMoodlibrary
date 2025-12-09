@@ -13,9 +13,9 @@ class MoodSorter:
 
     이 클래스는 내부적으로 다음 컴포넌트를 사용한다.
 
-    - ``AudioPreprocessor``: 오디오 파일을 텍스트로 변환
-    - ``YouTubeDownloader``: YouTube URL에서 오디오를 추출하고 텍스트로 변환
-    - ``EmphaticSentimentAnalyzer``: 텍스트 감정 분석
+    - AudioPreprocessor: 오디오 파일을 텍스트로 변환
+    - YouTubeDownloader: YouTube URL에서 오디오를 추출하고 텍스트로 변환
+    - EmphaticSentimentAnalyzer: 텍스트 감정 분석
     """
 
     def __init__(self, language: str = "ko-KR"):
@@ -73,10 +73,10 @@ class MoodSorter:
         dict
             다음 정보를 포함하는 결과 딕셔너리.
 
-            - ``type``: "text"
-            - ``original``: 원본 텍스트 문자열
-            - ``emotion_label``: 최종 감정 레이블(예: "positive", "negative", "중립" 등)
-            - ``raw``: 내부 감정 분석기의 상세 결과 딕셔너리
+            - type: "text"
+            - original: 원본 텍스트 문자열
+            - emotion_label: 최종 감정 레이블(예: "positive", "negative", "중립" 등)
+            - raw: 내부 감정 분석기의 상세 결과 딕셔너리
         """
 
         text_result = self.text_analyzer.analyze(text)
@@ -105,10 +105,10 @@ class MoodSorter:
         dict
             다음 정보를 포함하는 결과 딕셔너리.
 
-            - ``type``: "youtube"
-            - ``url``: 입력된 YouTube URL
-            - ``emotion_label``: 최종 감정 레이블 또는 "중립"(실패 시)
-            - ``raw``: 인식된 텍스트, 텍스트 분석 결과, 에러 메시지 등이 포함된 딕셔너리
+            - type: "youtube"
+            - url: 입력된 YouTube URL
+            - emotion_label: 최종 감정 레이블 또는 "중립"(실패 시)
+            - raw: 인식된 텍스트, 텍스트 분석 결과, 에러 메시지 등이 포함된 딕셔너리
         """
 
         extracted_text: Optional[str] = self.youtube_downloader.extract_text_from_youtube(
@@ -146,8 +146,8 @@ class MoodSorter:
         path : str or Path
             분석할 파일 경로. 지원 확장자는 다음과 같다.
 
-            - 텍스트: ``.txt``
-            - 오디오: ``.wav``, ``.flac``, ``.aiff``, ``.aif``
+            - 텍스트: .txt
+            - 오디오: .wav, .flac, .aiff, .aif
 
         Returns
         -------
@@ -155,19 +155,19 @@ class MoodSorter:
             파일 타입에 따라 다음과 같은 정보를 담는 결과 딕셔너리.
 
             - 텍스트 파일:
-              - ``type``: "text"
-              - ``path``: 파일 경로 문자열
-              - ``emotion_label``: 감정 레이블
-              - ``raw``: 텍스트 분석 결과
+              - type: "text"
+              - path: 파일 경로 문자열
+              - emotion_label: 감정 레이블
+              - raw: 텍스트 분석 결과
             - 오디오 파일:
-              - ``type``: "audio"
-              - ``path``: 파일 경로 문자열
-              - ``emotion_label``: 감정 레이블 또는 "중립"(인식 실패 시)
-              - ``raw``: 인식된 텍스트와 텍스트 분석 결과
+              - type: "audio"
+              - path: 파일 경로 문자열
+              - emotion_label: 감정 레이블 또는 "중립"(인식 실패 시)
+              - raw: 인식된 텍스트와 텍스트 분석 결과
             - 지원하지 않는 타입:
-              - ``type``: "unknown"
-              - ``emotion_label``: "unknown"
-              - ``raw``: 빈 딕셔너리
+              - type: "unknown"
+              - emotion_label: "unknown"
+              - raw: 빈 딕셔너리
         """
 
         
@@ -505,8 +505,8 @@ def make_unique_path(path: Path) -> Path:
     이미 같은 경로의 파일이 존재하면, 뒤에 숫자 인덱스를 붙여
     겹치지 않는 고유한 경로를 만들어 준다.
 
-    예를 들어 ``filename.txt``가 이미 있으면
-    ``filename_1.txt``, ``filename_2.txt`` 순서로 새 이름을 만든다.
+    예를 들어 filename.txt가 이미 있으면
+    filename_1.txt, filename_2.txt 순서로 새 이름을 만든다.
 
     Parameters
     ----------
