@@ -7,28 +7,17 @@ from .audio import AudioPreprocessor, YouTubeDownloader
 from .text import EmphaticSentimentAnalyzer
 from .utils import get_file_type, build_output_path, move_or_copy
 
-
 class MoodSorter:
     """
-    텍스트 / 오디오 파일 및 각종 URL(YouTube, 기사 URL)을 받아
-    감정 레이블을 분석하고, 필요에 따라 파일을 레이블별 폴더로
-    정리해 주는 헬퍼 클래스.
+    텍스트 / 오디오 파일 또는 YouTube URL을 받아 감정 분석을 도와주는 헬퍼 클래스.
 
-    Parameters
-    ----------
-    language : str, optional
-        오디오 음성 인식에 사용할 언어 코드.
-        기본값은 "ko-KR"이며, SpeechRecognition에서 사용된다.
+    이 클래스는 내부적으로 다음 컴포넌트를 사용한다.
 
-    Attributes
-    ----------
-    audio_preprocessor : AudioPreprocessor
-        오디오 파일을 텍스트로 변환하는 전처리기.
-    youtube_downloader : YouTubeDownloader
-        YouTube URL에서 오디오를 추출하고 텍스트를 인식하는 도우미.
-    text_analyzer : EmphaticSentimentAnalyzer
-        텍스트의 감정을 분석하는 감성 분석기.
+    - ``AudioPreprocessor``: 오디오 파일을 텍스트로 변환
+    - ``YouTubeDownloader``: YouTube URL에서 오디오를 추출하고 텍스트로 변환
+    - ``EmphaticSentimentAnalyzer``: 텍스트 감정 분석
     """
+
 
 
     def __init__(self, language: str = "ko-KR"):
@@ -84,14 +73,14 @@ class MoodSorter:
         Returns
         -------
         dict
-            분석 결과 딕셔너리. 예시:
-            {
-                "type": "text",
-                "original": 원본 텍스트,
-                "emotion_label": 최종 감정 레이블,
-                "raw": 텍스트 분석의 전체 결과 딕셔너리
-            }
+            다음 정보를 포함하는 결과 딕셔너리.
+
+            - ``type``: "text"
+            - ``original``: 원본 텍스트 문자열
+            - ``emotion_label``: 최종 감정 레이블(예: "positive", "negative", "중립" 등)
+            - ``raw``: 내부 감정 분석기의 상세 결과 딕셔너리
         """
+
         text_result = self.text_analyzer.analyze(text)
         label = self._label_from_text_result(text_result)
 
@@ -116,18 +105,14 @@ class MoodSorter:
         Returns
         -------
         dict
-            분석 결과 딕셔너리. 예시:
-            {
-                "type": "youtube",
-                "url": 입력 URL,
-                "emotion_label": 최종 감정 레이블 또는 "중립" (실패 시),
-                "raw": {
-                    "recognized_text": 인식된 텍스트 (성공 시),
-                    "text_analysis": 텍스트 분석 결과,
-                    "error": "audio_recognition_failed" (실패 시)
-                }
-            }
+            다음 정보를 포함하는 결과 딕셔너리.
+
+            - ``type``: "youtube"
+            - ``url``: 입력된 YouTube URL
+            - ``emotion_label``: 최종 감정 레이블 또는 "중립"(실패 시)
+            - ``raw``: 인식된 텍스트, 텍스트 분석 결과, 에러 메시지 등이 포함된 딕셔너리
         """
+
         extracted_text: Optional[str] = self.youtube_downloader.extract_text_from_youtube(
             url
         )
@@ -161,42 +146,32 @@ class MoodSorter:
         Parameters
         ----------
         path : str or Path
-            분석할 파일 경로. 지원 확장자는
-            - 텍스트: .txt
-            - 오디오: .wav, .flac, .aiff, .aif
+            분석할 파일 경로. 지원 확장자는 다음과 같다.
+
+            - 텍스트: ``.txt``
+            - 오디오: ``.wav``, ``.flac``, ``.aiff``, ``.aif``
 
         Returns
         -------
         dict
-            분석 결과 딕셔너리. 타입에 따라 구조가 다르다.
+            파일 타입에 따라 다음과 같은 정보를 담는 결과 딕셔너리.
 
-            텍스트 파일:
-            {
-                "path": 파일 경로 문자열,
-                "type": "text",
-                "emotion_label": 감정 레이블,
-                "raw": 텍스트 분석 결과
-            }
-
-            오디오 파일:
-            {
-                "path": 파일 경로 문자열,
-                "type": "audio",
-                "emotion_label": 감정 레이블 또는 "중립"(인식 실패 시),
-                "raw": {
-                    "recognized_text": 인식된 텍스트,
-                    "text_analysis": 텍스트 분석 결과
-                }
-            }
-
-            지원하지 않는 타입:
-            {
-                "path": 파일 경로 문자열,
-                "type": "unknown",
-                "emotion_label": "unknown",
-                "raw": {}
-            }
+            - 텍스트 파일:
+              - ``type``: "text"
+              - ``path``: 파일 경로 문자열
+              - ``emotion_label``: 감정 레이블
+              - ``raw``: 텍스트 분석 결과
+            - 오디오 파일:
+              - ``type``: "audio"
+              - ``path``: 파일 경로 문자열
+              - ``emotion_label``: 감정 레이블 또는 "중립"(인식 실패 시)
+              - ``raw``: 인식된 텍스트와 텍스트 분석 결과
+            - 지원하지 않는 타입:
+              - ``type``: "unknown"
+              - ``emotion_label``: "unknown"
+              - ``raw``: 빈 딕셔너리
         """
+
         
         p = Path(path)
         file_type = get_file_type(p)
@@ -257,27 +232,31 @@ class MoodSorter:
         move: bool = False,
     ) -> Dict[str, Any]:
         """
-        파일 하나를 분석한 뒤,
-        `output_root/감정_레이블/파일명` 형태의 위치로
-        복사하거나(move=True) 이동한다.
+        파일 하나를 분석한 뒤, 감정 레이블별 하위 폴더로 정리한다.
+
+        결과 파일 경로는 대략 다음과 같은 형태가 된다.
+
+        - ``output_root/<감정_레이블>/<파일명>``
 
         Parameters
         ----------
         path : str or Path
             정렬할 원본 파일 경로.
         output_root : str or Path
-            감정 레이블별로 파일을 정렬해 둘 루트 디렉토리.
+            감정 레이블별로 파일을 정렬해 둘 루트 디렉터리.
         move : bool, optional
-            True이면 원본 파일을 이동(shutil.move)하고,
-            False이면 복사(shutil.copy2)한다. 기본값은 False.
+            True이면 원본 파일을 이동하고, False이면 복사한다.
+            기본값은 False.
 
         Returns
         -------
         dict
-            analyze_file()의 결과에 다음 필드가 추가된 딕셔너리:
-            - "sorted_path": 실제로 복사/이동된 최종 경로 (str)
-            - "moved": 이동 여부(bool, move 인자와 동일)
+            ``analyze_file()``의 결과에 다음 필드가 추가된 딕셔너리.
+
+            - ``sorted_path``: 실제로 복사/이동된 최종 경로(문자열)
+            - ``moved``: 이동 여부(bool, ``move`` 인자와 동일)
         """
+
         
         p = Path(path)
         output_root = Path(output_root)
@@ -303,25 +282,22 @@ class MoodSorter:
         Parameters
         ----------
         input_value : str or Path
-            - YouTube URL (youtube.com / youtu.be / shorts)
+            다음 중 하나를 받을 수 있다.
+
+            - YouTube URL (``youtube.com``, ``youtu.be``, ``shorts`` 등)
             - 일반 기사 URL (http/https)
             - 로컬 파일 경로(txt 또는 오디오 파일)
 
         Returns
         -------
         dict
-            입력 타입에 따라 다음과 같은 형태 중 하나를 반환한다.
+            입력 타입에 따라 다음 형태 중 하나를 반환한다.
 
-            - YouTube URL  → analyze_youtube() 결과
-            - 기사 URL     → {
-                                "type": "url",
-                                "url": 입력 URL,
-                                "emotion_label": 레이블,
-                                "raw": 텍스트 분석/크롤링 결과
-                              }
-            - 로컬 파일    → analyze_file() 결과
+            - YouTube URL: ``analyze_youtube()``의 결과
+            - 기사 URL: ``type="url"``과 분석 결과를 담은 딕셔너리
+            - 로컬 파일: ``analyze_file()``의 결과
         """
-        ...
+
 
         # 1) 문자열이면서 URL인 경우
         if isinstance(input_value, str) and is_http_url(input_value):
@@ -361,42 +337,41 @@ class MoodSorter:
         필요한 경우 텍스트 파일(.txt)로 저장한 뒤 감정 레이블별 폴더로
         정렬까지 수행한다.
 
-        처리 규칙
-        ----------
-        1) 로컬 텍스트/오디오 파일
-            - analyze() → sort_file()을 호출하여
-              base_dir/sorted/<레이블>/ 로 복사 또는 이동.
+        동작 방식은 입력 타입별로 다음과 같다.
 
-        2) YouTube URL
-            - STT로 인식된 텍스트(또는 에러 메시지)를
-              base_dir/downloaded/youtube/*.txt 로 저장 후
-              base_dir/sorted/<레이블>/ 로 정렬.
-
-        3) 기사 URL(http/https)
-            - 크롤링/분석된 본문 텍스트를
-              base_dir/downloaded/articles/*.txt 로 저장 후
-              base_dir/sorted/<레이블>/ 로 정렬.
+        - 로컬 텍스트/오디오 파일:
+          - ``analyze()``로 감정 분석을 수행한 뒤
+          - ``base_dir/sorted/<레이블>/`` 아래로 파일을 복사 또는 이동한다.
+        - YouTube URL:
+          - 음성을 텍스트로 변환한 결과를
+            ``base_dir/downloaded/youtube/*.txt`` 로 저장 후
+          - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
+        - 기사 URL(http/https):
+          - 크롤링한 본문 텍스트를
+            ``base_dir/downloaded/articles/*.txt`` 로 저장 후
+          - ``base_dir/sorted/<레이블>/`` 아래로 정렬한다.
 
         Parameters
         ----------
         input_value : str or Path
             분석할 입력값(파일 경로, YouTube URL, 기사 URL 등).
         base_dir : str or Path
-            다운로드된 텍스트 및 정렬된 결과를 저장할 기준 디렉토리.
+            다운로드된 텍스트 및 정렬된 결과를 저장할 기준 디렉터리.
         move : bool, optional
-            True이면 정렬 시 원본 파일을 이동,
+            True이면 정렬 시 원본 파일을 이동하고,
             False이면 복사한다. URL 기반 입력의 경우에는
-            새로 생성된 .txt 파일만 정렬 대상이 된다.
+            새로 생성된 ``.txt`` 파일만 정렬 대상이 된다.
 
         Returns
         -------
         dict
-            self.analyze()의 결과에 다음 필드가 추가된 딕셔너리:
-            - "saved_txt_path": URL/YouTube에서 생성된 .txt 경로(없으면 None)
-            - "sorted_path": 최종 정렬된 파일 경로(없으면 None)
-            - "moved": 이동 여부(bool)
+            ``self.analyze()``의 결과에 다음 필드가 추가된 딕셔너리.
+
+            - ``saved_txt_path``: URL/YouTube에서 생성된 ``.txt`` 파일 경로(없으면 None)
+            - ``sorted_path``: 최종 정렬된 파일 경로(없으면 None)
+            - ``moved``: 이동 여부(bool)
         """
-        ...
+
 
         base_dir = Path(base_dir)
         downloaded_dir = base_dir / "downloaded"
@@ -496,7 +471,7 @@ def is_http_url(s: str) -> bool:
 
 def safe_filename(name: str) -> str:
     """
-    파일 이름에 사용할 수 없는 문자들을 '_'로 치환하여
+    파일 이름에 사용할 수 없는 문자들을 ``"_"``로 치환하여
     안전한 파일 이름 문자열을 생성한다.
 
     Parameters
@@ -508,13 +483,9 @@ def safe_filename(name: str) -> str:
     -------
     str
         파일 시스템에서 사용할 수 있는 안전한 파일 이름.
-        공백 또는 전부 치환된 경우 "untitled"를 반환한다.
-
-    Examples
-    --------
-    >>> safe_filename("안녕? test.txt")
-    '____test.txt'
+        모든 문자가 치환되어 비게 되면 ``"untitled"``를 반환한다.
     """
+
     cleaned = []
     
     for ch in name:
@@ -532,7 +503,8 @@ def make_unique_path(path: Path) -> Path:
     이미 같은 경로의 파일이 존재하면, 뒤에 숫자 인덱스를 붙여
     겹치지 않는 고유한 경로를 만들어 준다.
 
-    예: filename.txt → filename_1.txt → filename_2.txt ...
+    예를 들어 ``filename.txt``가 이미 있으면
+    ``filename_1.txt``, ``filename_2.txt`` 순서로 새 이름을 만든다.
 
     Parameters
     ----------
@@ -543,15 +515,8 @@ def make_unique_path(path: Path) -> Path:
     -------
     Path
         아직 존재하지 않는 고유한 파일 경로.
-
-    Examples
-    --------
-    >>> make_unique_path(Path("result.txt"))
-    PosixPath('result.txt')  # 파일이 없을 때
-
-    >>> make_unique_path(Path("result.txt"))
-    PosixPath('result_1.txt')  # 기존 파일이 있을 때
     """
+
     path = Path(path)
     if not path.exists():
         return path
