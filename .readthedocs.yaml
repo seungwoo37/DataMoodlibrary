@@ -5,8 +5,8 @@ build:
   tools:
     python: "3.13"
 
-apt_packages:
-  - FFmpeg
+  apt_packages:
+    - FFmpeg
 
 python:
   install:
