@@ -5,10 +5,15 @@ import speech_recognition as sr
 import shutil
 
 """
-FFmpeg 환경 설정 및 경로 지정
-FFmpeg은 오디오/비디오 파일을 인코딩, 디코딩, 변환하는 데 사용되는 핵심 도구
-yt-dlp가 오디오를 추출하거나 pydub이 MP3를 WAV로 변환할 때 필수적으로 필요함
+datamood 모듈
+=============
+
+YouTube 오디오 다운로드 → WAV 변환 → 텍스트 추출을 위한 기능을 제공하는 모듈입니다.
 """
+
+# -------------------------------------------------------------
+# FFmpeg 환경 설정
+# -------------------------------------------------------------
 FFMPEG_BIN_PATH = r"C:\Users\jinui\ffmpeg-2025-12-04-git-d6458f6a8b-full_build\bin" 
 
 # 사용자 환경에 맞게 FFmpeg 실행 파일이 있는 디렉토리를 시스템 PATH 환경 변수에 추가
@@ -22,8 +27,12 @@ print(f"✅ FFMPEG_PATH 확인: {os.environ.get('FFMPEG_PATH')}")
 # 오디오 파일을 받아서 텍스트로 추출하는 클래스
 class AudioPreprocessor:
     """
-    오디오 파일에서 텍스트를 추출하여 감정 분석을 위한
-    텍스트 전처리 단계를 수행하고, 그 결과를 파일로 저장하는 클래스
+    오디오 파일에서 텍스트를 추출하고 결과를 파일로 저장하는 클래스입니다.
+
+    Parameters
+    ----------
+    language : str, optional
+        음성 인식에 사용할 언어 코드입니다. 기본값은 ``'ko-KR'`` 입니다.
     """
     def __init__(self, language='ko-KR'):
         # Recognizer 객체 초기화
@@ -32,7 +41,25 @@ class AudioPreprocessor:
         self.language = language
 
     def extract_text_from_audio(self, audio_file_path):
-        # 주어진 오디오 파일 경로에서 텍스트를 추출
+        """
+        주어진 오디오 파일을 분석하여 텍스트를 추출합니다.
+
+        Parameters
+        ----------
+        audio_file_path : str
+            텍스트를 추출할 WAV 또는 음성 파일 경로.
+
+        Returns
+        -------
+        str or None
+            인식된 텍스트 문자열.  
+            인식 실패 시 ``None`` 을 반환합니다.
+
+        Raises
+        ------
+        FileNotFoundError
+            파일을 찾을 수 없을 때 발생합니다.
+        """
         try:
             with sr.AudioFile(audio_file_path) as source:
                 print(f"-> 오디오 파일 '{audio_file_path}' 로드 중...")
@@ -64,7 +91,21 @@ class AudioPreprocessor:
             return None
 
     def save_text_to_file(self, text_content, output_file_path):
-        # 추출된 텍스트를 지정된 경로의 .txt 파일로 저장
+        """
+        추출된 텍스트를 파일로 저장합니다.
+
+        Parameters
+        ----------
+        text_content : str
+            저장할 텍스트 내용.
+        output_file_path : str
+            출력 텍스트 파일 경로.
+
+        Returns
+        -------
+        bool
+            저장 성공 여부.
+        """
         try:
             with open(output_file_path, 'w', encoding='utf-8') as f:
                 f.write(text_content)
@@ -78,9 +119,16 @@ class AudioPreprocessor:
 # YouTube 다운로드 및 WAV 변환 클래스
 class YouTubeDownloader:
     """
-    YouTube 영상에서 오디오를 다운로드하고, 음성 인식을 위해
-    MP3에서 WAV 형식으로 변환하는 역할을 담당하는 클래스입니다.
+    YouTube 영상에서 오디오를 다운로드하고 WAV 파일로 변환한 뒤,
+    텍스트 인식까지 자동으로 처리하는 클래스입니다.
+
+    Parameters
+    ----------
+    output_dir : str, optional
+        임시 파일을 저장할 디렉토리 이름입니다.  
+        기본값은 ``'audio_temp'`` 입니다.
     """
+    
     def __init__(self, output_dir="audio_temp"):
         # 임시 파일을 저장할 디렉토리 이름 설정
         self.output_dir = output_dir
@@ -93,7 +141,25 @@ class YouTubeDownloader:
         self.output_wav_path = os.path.join(self.output_dir, "output_recognition.wav")
 
     def download_and_convert(self, youtube_url):
-        """YouTube URL에서 오디오를 다운로드하고 WAV로 변환합니다."""
+        """
+        YouTube URL에서 오디오를 다운로드하고 WAV 파일로 변환합니다.
+
+        Parameters
+        ----------
+        youtube_url : str
+            오디오를 다운로드할 YouTube 영상 URL.
+
+        Returns
+        -------
+        str or None
+            변환된 WAV 파일 경로.  
+            다운로드 또는 변환 오류 시 ``None`` 반환.
+
+        Notes
+        -----
+        - ``yt-dlp`` 를 사용해 MP3로 추출합니다.  
+        - ``pydub`` + ``FFmpeg`` 을 이용하여 WAV로 변환합니다.
+        """
         ydl_opts = {
             # yt-dlp에게 최적의 오디오 형식으로 다운로드하도록 지시
             'format': 'bestaudio/best', 
@@ -137,7 +203,13 @@ class YouTubeDownloader:
             return None
 
     def cleanup(self):
-        #작업이 완료된 후 임시 디렉토리와 그 안의 파일들을 삭제하여 정리
+        """
+        다운로드 및 변환 과정에서 생성된 임시 디렉토리와 파일을 삭제합니다.
+
+        Notes
+        -----
+        작업 후 자동 정리할 때 호출됩니다.
+        """
         print("\n✅ 4. 임시 파일 정리 중...")
         try:
             # shutil.rmtree를 사용하여 디렉토리와 그 내용을 재귀적으로 삭제
@@ -148,7 +220,24 @@ class YouTubeDownloader:
             
     def extract_text_from_youtube(self, youtube_url, cleanup=True, output_txt_path = "output_transcript.txt"):
         """
-        YouTube URL을 받아 오디오 다운로드 → WAV 변환 → 텍스트 인식까지 수행하는 통합 함수
+        YouTube URL을 입력받아  
+        **오디오 다운로드 → WAV 변환 → 텍스트 인식 → 텍스트 파일 저장**  
+        전체 프로세스를 자동으로 수행합니다.
+
+        Parameters
+        ----------
+        youtube_url : str
+            처리할 YouTube 영상 URL.
+        cleanup : bool, optional
+            작업 완료 후 임시 파일을 삭제할지 여부. 기본값 ``True``.
+        output_txt_path : str, optional
+            저장할 텍스트 파일 경로.
+
+        Returns
+        -------
+        str or None
+            인식된 텍스트.  
+            실패 시 ``None``.
         """
         print(f"YouTube URL 처리 시작: {youtube_url}")
 
