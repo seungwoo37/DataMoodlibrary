@@ -4,15 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "datamood"
-version = "0.0.0"
+version = "0.1.0"
 description = "Multimodal sentiment sorting (text + audio)"
 authors = [
-  { name = "Team DataMood" },
+  { name = "Team Moodeudeung" },
 ]
 readme = "README.md"
 requires-python = ">=3.8"
 
-dependencies = [
+dependencies = []
+
+[project.scripts]
+datamood = "datamood.cli:main"
+
+[project.optional-dependencies]
+full = [
   "SpeechRecognition",
   "konlpy",
   "yt-dlp",
@@ -21,6 +27,3 @@ dependencies = [
   "requests",
   "jpype1"
 ]
-
-[project.scripts]
-datamood = "datamood.cli:main"
