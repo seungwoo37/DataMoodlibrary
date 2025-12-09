@@ -7,10 +7,55 @@ from datamood.utils import iter_input_files
 
 
 def main() -> None:
+    """
+    datamood 패키지의 CLI 엔트리 포인트.
+
+    텍스트/오디오 파일 또는 YouTube URL을 입력받아
+    감정 레이블별로 분석하고, 결과를 지정한 출력 디렉토리로
+    정렬해 주는 명령줄 인터페이스를 실행한다.
+
+    Parameters
+    ----------
+    None
+        명시적인 인자는 없으며, 명령줄 인자를 argparse를 통해
+        `sys.argv`에서 파싱한다.
+
+    Returns
+    -------
+    None
+        이 함수는 종료 시 값을 반환하지 않는다.
+
+    Notes
+    -----
+    사용 모드는 두 가지다.
+
+    1. 파일/폴더 정렬 모드
+        - `input`: 분석할 파일 또는 디렉토리 경로 (필수)
+        - `-o, --output`: 정렬된 파일을 저장할 루트 디렉토리 (기본값: "sorted")
+        - `--move`: 복사 대신 파일을 이동시키는 옵션 (기본값: False, 복사)
+
+    2. YouTube 분석 모드
+        - `--youtube`: 분석할 YouTube URL
+        - 이 모드에서는 `input` 인자를 생략할 수 있다.
+
+    Examples
+    --------
+    터미널에서:
+
+    텍스트/오디오 파일 정렬:
+    >>> datamood ./data
+
+    출력 디렉토리와 이동 옵션 지정:
+    >>> datamood ./data -o ./sorted --move
+
+    YouTube URL 분석:
+    >>> datamood --youtube "https://www.youtube.com/watch?v=XXXX"
+    """
     parser = argparse.ArgumentParser(
         prog="datamood",
         description="텍스트 / 오디오 파일 또는 YouTube URL을 감정 레이블별로 분석/정렬하는 CLI",
     )
+
 
     # 파일/폴더 입력(선택적 — YouTube 모드이면 없어도 됨)
     parser.add_argument(
