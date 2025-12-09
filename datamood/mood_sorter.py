@@ -426,6 +426,7 @@ class MoodSorter:
                 result["moved"] = sort_result.get("moved", False)
             return result
 
+
         # 2-2) YouTube URL → recognized_text 저장 후 정렬
         if input_type == "youtube":
             raw = result.get("raw") or {}
