@@ -1,4 +1,4 @@
-datamood package
+Datamood Package
 ================
 
 Datamood는 오디오와 텍스트 데이터를 기반으로  
